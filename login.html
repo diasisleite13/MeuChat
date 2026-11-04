@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeuChat - Entrar</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="login-container">
+        <h1>MeuChat</h1>
+        <p>Converse com seus amigos!</p>
+
+        <form id="loginForm">
+            <input type="text" id="name" placeholder="Seu nome (para cadastro)">
+
+            <input type="email" id="email" placeholder="Seu e-mail" required>
+
+            <input type="password" id="password" placeholder="Sua senha" required>
+
+            <button type="submit">Entrar</button>
+
+            <button type="button" id="registerBtn">Criar minha conta</button>
+        </form>
+
+        <p id="message"></p>
+    </div>
+
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>
