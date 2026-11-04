@@ -5,7 +5,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Familia Leite</title>
+
 <link rel="stylesheet" href="css/style.css">
+
+<!-- CONFIGURAÇÕES DO APLICATIVO PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#071a33">
+<link rel="apple-touch-icon" href="./icon-192.png">
 
 <style>
 * { box-sizing: border-box; }
@@ -385,6 +391,33 @@ body {
     display: none;
 }
 
+/* BOTÃO INSTALAR APLICATIVO */
+
+#installButton {
+    display: none;
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 99999;
+    padding: 12px 16px;
+    border: 1px solid #319cff;
+    border-radius: 12px;
+    background: #087fe5;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.35);
+}
+
+#installButton.visible {
+    display: block;
+}
+
+#installButton:active {
+    transform: scale(0.97);
+}
+
 @media (max-width: 650px) {
     .app {
         height: 100vh;
@@ -454,11 +487,23 @@ body {
     .message-audio {
         width: 210px;
     }
+
+    #installButton {
+        top: 8px;
+        right: 8px;
+        padding: 10px 12px;
+        font-size: 12px;
+    }
 }
 </style>
 </head>
 
 <body>
+
+<!-- BOTÃO DE INSTALAÇÃO -->
+<button id="installButton" type="button">
+    📲 Instalar Família Leite
+</button>
 
 <div class="app" id="app">
 
@@ -1101,8 +1146,6 @@ audioButton.addEventListener("click", async () => {
         return;
     }
 
-    /* Se já estiver gravando, parar */
-
     if (isRecording) {
 
         if (mediaRecorder && mediaRecorder.state === "recording") {
@@ -1111,8 +1154,6 @@ audioButton.addEventListener("click", async () => {
 
         return;
     }
-
-    /* Verificar suporte do navegador */
 
     if (
         !navigator.mediaDevices ||
@@ -1132,8 +1173,6 @@ audioButton.addEventListener("click", async () => {
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: true
         });
-
-        /* Escolher formato de áudio compatível */
 
         let options = {};
 
@@ -1181,8 +1220,6 @@ audioButton.addEventListener("click", async () => {
             audioButton.classList.remove("recording");
             audioButton.disabled = true;
 
-            /* Liberar o microfone */
-
             stream.getTracks().forEach(track => track.stop());
 
             try {
@@ -1204,8 +1241,6 @@ audioButton.addEventListener("click", async () => {
                 status.textContent = "Preparando áudio...";
 
                 const audioData = await audioToBase64(audioBlob);
-
-                /* Limite para não ultrapassar o documento Firestore */
 
                 if (audioData.length > 850000) {
                     status.textContent =
@@ -1259,8 +1294,6 @@ audioButton.addEventListener("click", async () => {
 
         status.textContent =
             "🔴 Gravando... toque no botão para parar. Máximo de 20 segundos.";
-
-        /* Parar automaticamente após 20 segundos */
 
         recordingTimer = setTimeout(() => {
 
@@ -1388,8 +1421,6 @@ async function openConversation(otherUserId, name) {
                     row.className = "message-row " +
                         (isMine ? "mine" : "theirs");
 
-                    /* FOTO DO REMETENTE */
-
                     const avatarPhoto = userPhotos[senderId] || "";
 
                     let avatar;
@@ -1417,8 +1448,6 @@ async function openConversation(otherUserId, name) {
                         avatar.textContent = senderName.charAt(0).toUpperCase();
 
                     }
-
-                    /* BALÃO DA MENSAGEM */
 
                     const bubble = document.createElement("div");
                     bubble.className = "message";
@@ -1567,6 +1596,73 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
 
 });
 
+</script>
+
+<!-- REGISTRO DO SERVICE WORKER E INSTALAÇÃO PWA -->
+<script>
+let installPrompt = null;
+
+const installButton = document.getElementById("installButton");
+
+/* REGISTRAR SERVICE WORKER */
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", () => {
+
+        navigator.serviceWorker.register("./service-worker.js")
+            .then(() => {
+                console.log("Aplicativo Família Leite preparado!");
+            })
+            .catch(error => {
+                console.error("Erro ao registrar PWA:", error);
+            });
+
+    });
+
+}
+
+/* DETECTAR QUANDO O NAVEGADOR PERMITE INSTALAR */
+
+window.addEventListener("beforeinstallprompt", (event) => {
+
+    event.preventDefault();
+
+    installPrompt = event;
+
+    installButton.classList.add("visible");
+
+});
+
+/* BOTÃO INSTALAR */
+
+installButton.addEventListener("click", async () => {
+
+    if (!installPrompt) return;
+
+    installPrompt.prompt();
+
+    const result = await installPrompt.userChoice;
+
+    console.log("Resultado da instalação:", result.outcome);
+
+    installPrompt = null;
+
+    installButton.classList.remove("visible");
+
+});
+
+/* DETECTAR INSTALAÇÃO CONCLUÍDA */
+
+window.addEventListener("appinstalled", () => {
+
+    installPrompt = null;
+
+    installButton.classList.remove("visible");
+
+    console.log("Família Leite instalado com sucesso!");
+
+});
 </script>
 
 </body>
